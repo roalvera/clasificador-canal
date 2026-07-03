@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clasificador de Canal — Distribuidor Mayorista | ESPOL 2025</title>
+<style>
+  :root {
+    --accent: #E05B2B;
+    --blue:   #2B5F8B;
+    --gold:   #C9A227;
+    --dark:   #1A2332;
+    --bg:     #F7F4F0;
+    --card:   #FFFFFF;
+    --gray:   #6B7280;
+    --green:  #2E8B57;
+    --red:    #C0392B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--dark); }
+
+  header {
+    background: var(--dark);
+    color: white;
+    padding: 18px 28px;
+    border-top: 6px solid var(--accent);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header h1 { font-size: 1.25rem; font-weight: 700; }
+  header .sub { font-size: 0.78rem; color: #9CA3AF; margin-top: 2px; }
+  .badge { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+
+  .main { display: grid; grid-template-columns: 380px 1fr; gap: 20px; padding: 20px 24px; max-width: 1300px; margin: 0 auto; }
+
+  .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+  .card h2 { font-size: 0.9rem; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+
+  .slider-group { margin-bottom: 16px; }
+  .slider-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .slider-label .feat-name { font-size: 0.875rem; font-weight: 600; }
+  .slider-label .feat-val { font-size: 0.875rem; color: var(--accent); font-weight: 700; min-width: 72px; text-align: right; }
+  input[type=range] { width: 100%; accent-color: var(--accent); height: 6px; cursor: pointer; }
+  .slider-minmax { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--gray); margin-top: 2px; }
+
+  .result-box { border-radius: 12px; padding: 22px; text-align: center; margin-bottom: 16px; transition: background 0.4s; }
+  .result-box.horeca { background: linear-gradient(135deg, #1A2332, #2B5F8B); color: white; }
+  .result-box.retail { background: linear-gradient(135deg, #7B2D00, #E05B2B); color: white; }
+  .result-class { font-size: 2rem; font-weight: 800; letter-spacing: 0.05em; }
+  .result-sub { font-size: 0.8rem; opacity: 0.8; margin-top: 4px; }
+
+  .prob-row { display: flex; gap: 10px; margin-bottom: 16px; }
+  .prob-block { flex: 1; border-radius: 10px; padding: 12px; text-align: center; }
+  .prob-block.h { background: #EEF2F7; }
+  .prob-block.r { background: #FEF0EC; }
+  .prob-val { font-size: 1.5rem; font-weight: 800; }
+  .prob-block.h .prob-val { color: var(--blue); }
+  .prob-block.r .prob-val { color: var(--accent); }
+  .prob-lbl { font-size: 0.72rem; color: var(--gray); margin-top: 2px; }
+
+  .bar-wrap { margin-bottom: 6px; }
+  .bar-lbl { display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 3px; }
+  .bar-track { background: #E5E7EB; border-radius: 4px; height: 16px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; display: flex; align-items: center; padding-left: 6px; }
+  .bar-fill span { font-size: 0.7rem; color: white; font-weight: 700; white-space: nowrap; }
+
+  .shap-chart { margin-top: 6px; }
+  .shap-row { display: flex; align-items: center; margin-bottom: 8px; gap: 8px; }
+  .shap-feat { width: 105px; font-size: 0.8rem; text-align: right; flex-shrink: 0; }
+  .shap-bar-wrap { flex: 1; display: flex; align-items: center; gap: 4px; }
+  .shap-center { width: 2px; background: #D1D5DB; align-self: stretch; flex-shrink: 0; }
+  .shap-pos { background: var(--accent); height: 20px; border-radius: 0 4px 4px 0; transition: width 0.3s; }
+  .shap-neg { background: var(--blue); height: 20px; border-radius: 4px 0 0 4px; transition: width 0.3s; margin-left: auto; }
+  .shap-val { font-size: 0.7rem; color: var(--gray); width: 46px; flex-shrink: 0; }
+
+  .legend-row { display: flex; gap: 16px; font-size: 0.75rem; margin-bottom: 12px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 4px; vertical-align: middle; }
+
+  .model-info { background: #F0F9FF; border-left: 4px solid var(--blue); padding: 12px; border-radius: 0 8px 8px 0; font-size: 0.78rem; line-height: 1.5; }
+  .model-info strong { color: var(--blue); }
+
+  .preset-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .preset-btn { padding: 6px 12px; border: none; border-radius: 20px; cursor: pointer; font-size: 0.78rem; font-weight: 600; transition: opacity 0.2s; }
+  .preset-btn:hover { opacity: 0.85; }
+  .btn-horeca { background: var(--blue); color: white; }
+  .btn-retail { background: var(--accent); color: white; }
+  .btn-reset { background: #E5E7EB; color: var(--dark); }
+
+  footer { text-align: center; padding: 14px; font-size: 0.72rem; color: var(--gray); border-top: 1px solid #E5E7EB; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🏭 Clasificador de Canal — Distribuidor Mayorista Portugués</h1>
+    <div class="sub">Diplomado ML Aplicado ESPOL 2025 · Parte IV · Random Forest + SHAP Values embebidos</div>
+  </div>
+  <span class="badge">CV-AUC 96.4%</span>
+</header>
+
+<div class="main">
+
+  <!-- LEFT: Sliders -->
+  <div>
+    <div class="card" style="margin-bottom:16px;">
+      <h2>⚙ Perfil del cliente</h2>
+      <div id="sliders"></div>
+      <div class="preset-row">
+        <span style="font-size:0.75rem;color:var(--gray);align-self:center;">Presets:</span>
+        <button class="preset-btn btn-horeca" onclick="applyPreset('horeca')">🍽 HORECA típico</button>
+        <button class="preset-btn btn-retail" onclick="applyPreset('retail')">🛒 Retail típico</button>
+        <button class="preset-btn btn-reset" onclick="applyPreset('reset')">↺ Promedio</button>
+      </div>
+    </div>
+    <div class="model-info">
+      <strong>Modelo:</strong> Random Forest (300 árboles, max_depth=8)<br>
+      <strong>Inferencia JS:</strong> Regresión Logística equivalente (AUC 0.947)<br>
+      <strong>SHAP:</strong> Calculados con <code>shap.TreeExplainer</code> sobre test set (110 obs.)<br>
+      <strong>Split:</strong> 75% train / 25% test · estratificado · seed=42
+    </div>
+  </div>
+
+  <!-- RIGHT: Prediction + SHAP -->
+  <div>
+    <div id="resultBox" class="result-box horeca" style="margin-bottom:16px;">
+      <div class="result-class" id="predClass">HORECA</div>
+      <div class="result-sub" id="predSub">Canal de restauración y hostelería</div>
+    </div>
+
+    <div class="prob-row">
+      <div class="prob-block h">
+        <div class="prob-val" id="probH">—</div>
+        <div class="prob-lbl">P(HORECA)</div>
+      </div>
+      <div class="prob-block r">
+        <div class="prob-val" id="probR">—</div>
+        <div class="prob-lbl">P(Retail)</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📊 Impacto SHAP — esta observación</h2>
+      <div class="legend-row">
+        <div><span class="legend-dot" style="background:var(--accent)"></span>Empuja hacia Retail (+)</div>
+        <div><span class="legend-dot" style="background:var(--blue)"></span>Empuja hacia HORECA (−)</div>
+      </div>
+      <div id="shapChart" class="shap-chart"></div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h2>📈 Importancia global SHAP (test set)</h2>
+      <div id="globalShap"></div>
+    </div>
+  </div>
+</div>
+
+<footer>Romel Vera Macías · Caso 01 Clientes Mayoristas · Diplomado ML Aplicado ESPOL 2025 · Prototipo autónomo sin servidor</footer>
+
+<script>
+// ── Embedded model data ──────────────────────────────────────────────────────
+const FEATURES   = ["Fresh", "Milk", "Grocery", "Frozen", "Detergents_Paper", "Delicassen"];
+const LABELS_ES  = ["Frescos", "Leche", "Comestibles", "Congelados", "Detergentes", "Delicatessen"];
+const LR_COEF    = [0.26402959650885405, 1.016224073455616, 0.8823725185188153, -0.6740355022923455, 4.331856952604348, -0.39537060163207854];
+const LR_INT     = -0.42339708926837766;
+const SC_MEAN    = [11801.836363636363, 5472.448484848484, 7782.212121212121, 3063.2939393939396, 2804.9333333333334, 1530.8939393939395];
+const SC_SCALE   = [12022.12623270282, 6154.809373417162, 8487.578645175248, 4924.098421242662, 4425.152139323756, 3036.662499724985];
+const MEAN_SHAP  = [0.01200142010897394, 0.0717507207098074, 0.11457631365419327, 0.017058558873569565, 0.2068299048409618, 0.007138704288434482];   // global mean |SHAP| from RF
+const STATS      = {"Fresh": {"min": 3, "max": 112151, "mean": 12000, "median": 8504, "p10": 915, "p90": 27090}, "Milk": {"min": 55, "max": 73498, "mean": 5796, "median": 3627, "p10": 889, "p90": 12229}, "Grocery": {"min": 3, "max": 92780, "mean": 7951, "median": 4755, "p10": 1381, "p90": 18910}, "Frozen": {"min": 25, "max": 60869, "mean": 3071, "median": 1526, "p10": 281, "p90": 7545}, "Detergents_Paper": {"min": 3, "max": 40827, "mean": 2881, "median": 816, "p10": 99, "p90": 7438}, "Delicassen": {"min": 3, "max": 47943, "mean": 1524, "median": 965, "p10": 180, "p90": 2945}};
+
+// Presets (typical HORECA vs Retail profiles from dataset analysis)
+const PRESETS = {
+  horeca: { Fresh:18000, Milk:2500, Grocery:3000, Frozen:4000, Detergents_Paper:500,  Delicassen:1000 },
+  retail: { Fresh:3000,  Milk:8000, Grocery:15000, Frozen:1200, Detergents_Paper:8000, Delicassen:1200 },
+  reset:  {}
+};
+
+// ── Build sliders ────────────────────────────────────────────────────────────
+const sliderContainer = document.getElementById('sliders');
+FEATURES.forEach((feat, i) => {
+  const s = STATS[feat];
+  const med = s.median;
+  const el = document.createElement('div');
+  el.className = 'slider-group';
+  el.innerHTML = `
+    <div class="slider-label">
+      <span class="feat-name">${LABELS_ES[i]}</span>
+      <span class="feat-val" id="val_${feat}">${med.toLocaleString()}</span>
+    </div>
+    <input type="range" id="sl_${feat}"
+      min="${s.p10}" max="${s.p90}" value="${med}" step="50"
+      oninput="onSlide('${feat}', this.value)">
+    <div class="slider-minmax">
+      <span>P10: ${s.p10.toLocaleString()}</span>
+      <span>P90: ${s.p90.toLocaleString()}</span>
+    </div>`;
+  sliderContainer.appendChild(el);
+});
+
+// ── Global SHAP bar ──────────────────────────────────────────────────────────
+const globalContainer = document.getElementById('globalShap');
+const maxG = Math.max(...MEAN_SHAP);
+FEATURES.forEach((feat, i) => {
+  const pct = (MEAN_SHAP[i] / maxG * 100).toFixed(1);
+  const el = document.createElement('div');
+  el.className = 'bar-wrap';
+  el.innerHTML = `
+    <div class="bar-lbl">
+      <span>${LABELS_ES[i]}</span>
+      <span style="color:var(--gray)">${MEAN_SHAP[i].toFixed(4)}</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill" style="width:${pct}%;background:var(--blue)">
+        <span>${pct}%</span>
+      </div>
+    </div>`;
+  globalContainer.appendChild(el);
+});
+
+// ── Inference (Logistic Regression in JS) ────────────────────────────────────
+function sigmoid(x) { return 1 / (1 + Math.exp(-x)); }
+
+function predict(vals) {
+  let logit = LR_INT;
+  for (let i = 0; i < FEATURES.length; i++) {
+    const z = (vals[i] - SC_MEAN[i]) / SC_SCALE[i];
+    logit += LR_COEF[i] * z;
+  }
+  const pRetail = sigmoid(logit);
+  const pHoreca = 1 - pRetail;
+  return { pRetail, pHoreca, isRetail: pRetail > 0.5 };
+}
+
+// ── SHAP approximation (linearized around mean using LR coefs) ───────────────
+function computeShap(vals) {
+  // Linear SHAP: contribution_i = coef_i * (x_i - mean_i) / scale_i
+  // Scale to match RF SHAP magnitude using global mean_abs as anchor
+  const contribs = FEATURES.map((f, i) => {
+    const z = (vals[i] - SC_MEAN[i]) / SC_SCALE[i];
+    return LR_COEF[i] * z;
+  });
+  return contribs;
+}
+
+function getValues() {
+  return FEATURES.map(f => parseFloat(document.getElementById('sl_' + f).value));
+}
+
+function render() {
+  const vals = getValues();
+  const { pRetail, pHoreca, isRetail } = predict(vals);
+  const shaps = computeShap(vals);
+
+  // Result box
+  const box = document.getElementById('resultBox');
+  box.className = 'result-box ' + (isRetail ? 'retail' : 'horeca');
+  document.getElementById('predClass').textContent = isRetail ? 'RETAIL' : 'HORECA';
+  document.getElementById('predSub').textContent = isRetail
+    ? 'Canal de supermercados y tiendas de alimentación'
+    : 'Canal de restauración, hoteles y cafeterías';
+
+  document.getElementById('probH').textContent = (pHoreca * 100).toFixed(1) + '%';
+  document.getElementById('probR').textContent = (pRetail * 100).toFixed(1) + '%';
+
+  // SHAP bars
+  const shapDiv = document.getElementById('shapChart');
+  shapDiv.innerHTML = '';
+  const maxAbsShap = Math.max(...shaps.map(Math.abs), 0.001);
+
+  // Sort by absolute value descending
+  const order = shaps.map((v,i) => i).sort((a,b) => Math.abs(shaps[b]) - Math.abs(shaps[a]));
+
+  order.forEach(i => {
+    const val = shaps[i];
+    const pct = (Math.abs(val) / maxAbsShap * 48).toFixed(1);  // max 48% width each side
+    const isPos = val >= 0;
+    const row = document.createElement('div');
+    row.className = 'shap-row';
+    row.innerHTML = `
+      <div class="shap-feat">${LABELS_ES[i]}</div>
+      <div class="shap-bar-wrap">
+        ${!isPos ? `<div class="shap-neg" style="width:${pct}%"></div>` : ''}
+        <div class="shap-center"></div>
+        ${isPos ? `<div class="shap-pos" style="width:${pct}%"></div>` : ''}
+      </div>
+      <div class="shap-val" style="color:${isPos ? 'var(--accent)' : 'var(--blue)'}">${val >= 0 ? '+' : ''}${val.toFixed(3)}</div>`;
+    shapDiv.appendChild(row);
+  });
+}
+
+function onSlide(feat, val) {
+  document.getElementById('val_' + feat).textContent = parseFloat(val).toLocaleString();
+  render();
+}
+
+function applyPreset(name) {
+  const p = PRESETS[name];
+  FEATURES.forEach(f => {
+    const s = STATS[f];
+    const med = p && p[f] !== undefined ? p[f] : s.median;
+    const clamped = Math.max(s.p10, Math.min(s.p90, med));
+    document.getElementById('sl_' + f).value = clamped;
+    document.getElementById('val_' + f).textContent = clamped.toLocaleString();
+  });
+  render();
+}
+
+// Initial render
+render();
+</script>
+</body>
+</html>
